@@ -1,0 +1,15 @@
+{
+  "blocks": {
+    "custom-enquiry": {
+      "name": "Custom enquiry",
+      "settings": {
+        "intro_text": "Introductory rich text",
+        "show_intro_text": "Show intro text",
+        "show_product_context": "Show product details when a URL parameter is provided",
+        "product_handle_param": "Product handle URL parameter",
+        "preview_product": "Preview product for theme editor"
+      }
+    }
+  }
+}
+

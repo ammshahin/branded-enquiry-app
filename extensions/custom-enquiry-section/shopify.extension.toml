@@ -1,0 +1,6 @@
+name = "custom-enquiry-section"
+uid = "1a3fa815-eff5-5fec-9d68-f629854f68358d068a37"
+type = "theme"
+handle = "custom-enquiry-section"
+description = "Custom enquiry form section with localized fields."
+

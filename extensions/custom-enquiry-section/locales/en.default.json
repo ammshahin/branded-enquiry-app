@@ -1,0 +1,47 @@
+{
+  "sections": {
+    "custom_enquiry": {
+      "title": "Request a FREE visual",
+      "subtitle": "Complete the quick form below and we’ll return a personalised visual proof.",
+      "groups": {
+        "request": {
+          "title": "Request details",
+          "description": "Tell us who we’re designing for and when you need the finished items."
+        }
+      },
+      "fields": {
+        "name": "Your name",
+        "company_name": "Company",
+        "phone_number": "Telephone",
+        "email": "Email",
+        "quantity": "Quantity required",
+        "delivery_deadline": "Date required",
+        "worked_with_before": {
+          "label": "Have you or your organisation worked with us before or been contacted by one of our Account Managers?",
+          "placeholder": "Select an option",
+          "options": {
+            "no": "No",
+            "yes": "Yes",
+            "not_sure": "I'm not sure"
+          }
+        },
+        "attachment": "Attach your logo or artwork",
+        "attachment_hint": "Any image format or PDF (up to 25MB).",
+        "other_requirements": "Other requirements",
+        "other_requirements_placeholder": "If you have any questions or additional requirements, you can tell us about them here."
+      },
+      "submit": "Send enquiry",
+      "disclaimer": "We’ll respond with your FREE visual within one working day. By submitting this form you consent to us contacting you about this enquiry.",
+      "status": {
+        "success": "Thanks for reaching out! We'll be in touch shortly.",
+        "error": "We couldn't send your request. Please try again."
+      },
+      "product": {
+        "label": "Product selected",
+        "view_link": "View product",
+        "fallback": "We couldn't identify the product for this enquiry. Please include a reference in your message."
+      }
+    }
+  }
+}
+

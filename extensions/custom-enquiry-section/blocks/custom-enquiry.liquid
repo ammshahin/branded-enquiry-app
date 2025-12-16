@@ -1,0 +1,330 @@
+{% comment %}
+  Custom Enquiry Block
+  Renders a customizable enquiry form with localized copy and optional product context.
+  Ensure corresponding translation entries exist in locales.
+{% endcomment %}
+{% liquid
+  assign show_intro_text = block.settings.show_intro_text
+  assign product_handle_param = block.settings.product_handle_param | default: 'product_handle'
+  assign show_product_context = block.settings.show_product_context
+  assign preview_product = block.settings.preview_product
+  assign preview_product_json = nil
+  assign banner_image = block.settings.banner_image
+  assign banner_image_url = ''
+  if banner_image != blank
+    assign banner_image_url = banner_image | image_url: width: 1200
+  else
+    assign banner_image_url = 'https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=1200&q=80'
+  endif
+  if request.design_mode and preview_product != blank
+    assign preview_product_json = preview_product | json
+  endif
+%}
+{{ 'custom-enquiry.css' | asset_url | stylesheet_tag }}
+{{ 'custom-enquiry.js' | asset_url | script_tag }}
+
+<section
+  class="custom-enquiry"
+  id="custom-enquiry-{{ block.id }}"
+  {{ block.shopify_attributes }}
+>
+  <div
+    class="custom-enquiry__inner"
+    {% if show_product_context %}
+      data-product-context-wrapper
+    {% endif %}
+  >
+    <h1 class="custom-enquiry__heading">
+      {{ 'sections.custom_enquiry.title' | t }}
+    </h1>
+    {% if show_intro_text and block.settings.intro_text != blank %}
+      <div class="custom-enquiry__intro rte">
+        {{ block.settings.intro_text }}
+      </div>
+    {% endif %}
+    <p class="custom-enquiry__subheading">
+      {{ 'sections.custom_enquiry.subtitle' | t }}
+    </p>
+    {% if show_product_context %}
+      <div
+        class="custom-enquiry__product-context"
+        data-product-context
+        data-product-handle-param="{{ product_handle_param | escape }}"
+        data-shop-currency="{{ shop.currency }}"
+        data-locale="{{ request.locale.iso_code | default: shop.locale }}"
+      >
+        <article class="custom-enquiry__product-card" data-product-card hidden>
+          <div class="custom-enquiry__product-media" aria-hidden="true">
+            <img
+              class="custom-enquiry__product-image"
+              data-product-image
+              alt=""
+              width="400"
+              height="300"
+              loading="lazy"
+            >
+          </div>
+          <div class="custom-enquiry__product-copy">
+            <p class="custom-enquiry__product-label">
+              {{ 'sections.custom_enquiry.product.label' | t }}
+            </p>
+            <h2 class="custom-enquiry__product-title" data-product-title></h2>
+            <p class="custom-enquiry__product-price" data-product-price></p>
+            <a
+              class="custom-enquiry__product-link"
+              data-product-url
+              target="_blank"
+              rel="noopener"
+            >
+              {{ 'sections.custom_enquiry.product.view_link' | t }}
+            </a>
+          </div>
+        </article>
+        <p class="custom-enquiry__product-empty" data-product-empty hidden>
+          {{ 'sections.custom_enquiry.product.fallback' | t }}
+        </p>
+        {% if preview_product_json %}
+          <script type="application/json" data-preview-product>
+            {{ preview_product_json }}
+          </script>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <div class="custom-enquiry__layout">
+      <div class="custom-enquiry__form-wrapper">
+        <form
+          class="custom-enquiry__form js-custom-request-form"
+          method="post"
+          action="{{ routes.root_url }}apps/enquiry"
+          data-proxy-url="{{ routes.root_url }}apps/enquiry"
+          data-success-message="{{ 'sections.custom_enquiry.status.success' | t }}"
+          data-error-message="{{ 'sections.custom_enquiry.status.error' | t }}"
+          enctype="multipart/form-data"
+          novalidate
+        >
+          <div class="custom-enquiry__status" aria-live="polite" role="status"></div>
+          <input type="hidden" name="block_id" value="{{ block.id }}">
+          <input type="hidden" name="request_type" value="visual_enquiry">
+          {% if show_product_context %}
+            <input type="hidden" name="product_id" data-product-id-input>
+            <input type="hidden" name="product_handle" data-product-handle-input>
+            <input type="hidden" name="product_title" data-product-title-input>
+            <input type="hidden" name="product_url" data-product-url-input>
+          {% endif %}
+
+          <fieldset class="custom-enquiry__fieldset">
+            <legend class="custom-enquiry__legend">
+              {{ 'sections.custom_enquiry.groups.request.title' | t }}
+            </legend>
+            <p class="custom-enquiry__fieldset-description">
+              {{ 'sections.custom_enquiry.groups.request.description' | t }}
+            </p>
+            <div class="custom-enquiry__grid">
+              <div class="custom-enquiry__field">
+                <label class="custom-enquiry__label" for="custom-enquiry-name-{{ block.id }}">
+                  {{ 'sections.custom_enquiry.fields.name' | t }}
+                </label>
+                <input
+                  id="custom-enquiry-name-{{ block.id }}"
+                  class="custom-enquiry__input"
+                  type="text"
+                  name="name"
+                  autocomplete="name"
+                  required
+                >
+              </div>
+              <div class="custom-enquiry__field">
+                <label class="custom-enquiry__label" for="custom-enquiry-company-{{ block.id }}">
+                  {{ 'sections.custom_enquiry.fields.company_name' | t }}
+                </label>
+                <input
+                  id="custom-enquiry-company-{{ block.id }}"
+                  class="custom-enquiry__input"
+                  type="text"
+                  name="company_name"
+                  autocomplete="organization"
+                  required
+                >
+              </div>
+              <div class="custom-enquiry__field">
+                <label class="custom-enquiry__label" for="custom-enquiry-phone-{{ block.id }}">
+                  {{ 'sections.custom_enquiry.fields.phone_number' | t }}
+                </label>
+                <input
+                  id="custom-enquiry-phone-{{ block.id }}"
+                  class="custom-enquiry__input"
+                  type="tel"
+                  name="phone_number"
+                  autocomplete="tel"
+                  required
+                  inputmode="tel"
+                >
+              </div>
+              <div class="custom-enquiry__field">
+                <label class="custom-enquiry__label" for="custom-enquiry-email-{{ block.id }}">
+                  {{ 'sections.custom_enquiry.fields.email' | t }}
+                </label>
+                <input
+                  id="custom-enquiry-email-{{ block.id }}"
+                  class="custom-enquiry__input"
+                  type="email"
+                  name="email"
+                  autocomplete="email"
+                  required
+                  inputmode="email"
+                >
+              </div>
+              <div class="custom-enquiry__field">
+                <label class="custom-enquiry__label" for="custom-enquiry-quantity-{{ block.id }}">
+                  {{ 'sections.custom_enquiry.fields.quantity' | t }}
+                </label>
+                <input
+                  id="custom-enquiry-quantity-{{ block.id }}"
+                  class="custom-enquiry__input"
+                  type="number"
+                  min="1"
+                  step="1"
+                  name="quantity"
+                  inputmode="numeric"
+                  required
+                >
+              </div>
+              <div class="custom-enquiry__field">
+                <label class="custom-enquiry__label" for="custom-enquiry-deadline-{{ block.id }}">
+                  {{ 'sections.custom_enquiry.fields.delivery_deadline' | t }}
+                </label>
+                <input
+                  id="custom-enquiry-deadline-{{ block.id }}"
+                  class="custom-enquiry__input"
+                  type="date"
+                  name="delivery_deadline"
+                  required
+                >
+              </div>
+              <div class="custom-enquiry__field custom-enquiry__field--span-2">
+                <label class="custom-enquiry__label" for="custom-enquiry-worked-before-{{ block.id }}">
+                  {{ 'sections.custom_enquiry.fields.worked_with_before.label' | t }}
+                </label>
+                <select
+                  id="custom-enquiry-worked-before-{{ block.id }}"
+                  class="custom-enquiry__select"
+                  name="worked_with_before"
+                  required
+                >
+                  <option value="">
+                    {{ 'sections.custom_enquiry.fields.worked_with_before.placeholder' | t }}
+                  </option>
+                  <option value="no">
+                    {{ 'sections.custom_enquiry.fields.worked_with_before.options.no' | t }}
+                  </option>
+                  <option value="yes">
+                    {{ 'sections.custom_enquiry.fields.worked_with_before.options.yes' | t }}
+                  </option>
+                  <option value="not_sure">
+                    {{ 'sections.custom_enquiry.fields.worked_with_before.options.not_sure' | t }}
+                  </option>
+                </select>
+              </div>
+              <div class="custom-enquiry__field custom-enquiry__field--span-2">
+                <label class="custom-enquiry__label" for="custom-enquiry-attachment-{{ block.id }}">
+                  {{ 'sections.custom_enquiry.fields.attachment' | t }}
+                </label>
+                <input
+                  id="custom-enquiry-attachment-{{ block.id }}"
+                  class="custom-enquiry__input custom-enquiry__input--file"
+                  type="file"
+                  name="attachment"
+                >
+                <p class="custom-enquiry__field-hint">
+                  {{ 'sections.custom_enquiry.fields.attachment_hint' | t }}
+                </p>
+              </div>
+              <div class="custom-enquiry__field custom-enquiry__field--span-2">
+                <label class="custom-enquiry__label" for="custom-enquiry-other-{{ block.id }}">
+                  {{ 'sections.custom_enquiry.fields.other_requirements' | t }}
+                </label>
+                <textarea
+                  id="custom-enquiry-other-{{ block.id }}"
+                  class="custom-enquiry__textarea"
+                  name="other_requirements"
+                  rows="5"
+                  placeholder="{{ 'sections.custom_enquiry.fields.other_requirements_placeholder' | t }}"
+                ></textarea>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="custom-enquiry__actions">
+            <button class="custom-enquiry__submit" type="submit">
+              {{ 'sections.custom_enquiry.submit' | t }}
+            </button>
+            <p class="custom-enquiry__disclaimer">
+              {{ 'sections.custom_enquiry.disclaimer' | t }}
+            </p>
+          </div>
+        </form>
+      </div>
+      <aside class="custom-enquiry__banner" aria-hidden="true">
+        <img
+          class="custom-enquiry__banner-image"
+          src="{{ banner_image_url | escape }}"
+          alt=""
+          loading="lazy"
+        >
+      </aside>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Custom enquiry",
+  "target": "section",
+  "settings": [
+    {
+      "type": "richtext",
+      "id": "intro_text",
+      "label": "Introductory rich text",
+      "default": "<p>Share additional context for this enquiry form.</p>"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_intro_text",
+      "label": "Show intro text",
+      "default": false
+    },
+    {
+      "type": "image_picker",
+      "id": "banner_image",
+      "label": "Banner image",
+      "info": "Portrait-oriented image shown alongside the enquiry form."
+    },
+    {
+      "type": "header",
+      "content": "Product context"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_product_context",
+      "label": "Show product details when a URL parameter is provided",
+      "info": "Link to this page using a product handle query string, for example ?product_handle={{ product.handle }}.",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "product_handle_param",
+      "label": "Product handle URL parameter",
+      "default": "product_handle"
+    },
+    {
+      "type": "product",
+      "id": "preview_product",
+      "label": "Preview product for theme editor",
+      "info": "Shown in the theme editor when no URL parameter is present."
+    }
+  ]
+}
+{% endschema %}
+
+

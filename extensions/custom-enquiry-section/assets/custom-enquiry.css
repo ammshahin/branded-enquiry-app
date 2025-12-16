@@ -1,0 +1,364 @@
+.custom-enquiry {
+  padding: var(--spacing-10, 3rem) 0;
+  background-color: var(--color-background, #ffffff);
+  color: var(--color-foreground, #111111);
+}
+
+.custom-enquiry__inner {
+  margin: 0 auto;
+  max-width: var(--container-max-width, 100%);
+  padding: 0 var(--spacing-5, 1.5rem);
+}
+
+.custom-enquiry__heading,
+.custom-enquiry__subheading {
+  text-align: center;
+  margin-bottom: var(--spacing-4, 1rem);
+}
+
+.custom-enquiry__intro {
+  margin-bottom: var(--spacing-5, 1.5rem);
+  text-align: center;
+}
+
+.custom-enquiry__product-context {
+  margin: var(--spacing-6, 2rem) auto 0;
+  display: grid;
+  gap: var(--spacing-4, 1rem);
+}
+
+.custom-enquiry__product-card {
+  display: grid;
+  gap: var(--spacing-4, 1rem);
+  padding: var(--spacing-5, 1.5rem);
+  border: 1px solid var(--color-border, rgba(17, 17, 17, 0.1));
+  border-radius: var(--radius-base, 0.375rem);
+  background-color: var(--color-background, #ffffff);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(17, 17, 17, 0.1));
+}
+
+.custom-enquiry__product-media {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-base, 0.375rem);
+  overflow: hidden;
+  background: var(--color-background-soft, rgba(17, 17, 17, 0.04));
+}
+
+.custom-enquiry__product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.custom-enquiry__product-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-subdued, rgba(17, 17, 17, 0.7));
+}
+
+.custom-enquiry__product-title {
+  margin: var(--spacing-2, 0.75rem) 0 0;
+  font-size: 1.25rem;
+}
+
+.custom-enquiry__product-price {
+  margin: 0;
+  font-weight: 600;
+}
+
+.custom-enquiry__product-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: var(--spacing-3, 0.875rem);
+  font-weight: 600;
+  color: var(--color-button, #111111);
+  text-decoration: none;
+}
+
+.custom-enquiry__product-link:hover,
+.custom-enquiry__product-link:focus {
+  text-decoration: underline;
+}
+
+.custom-enquiry__product-empty {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--color-subdued, rgba(17, 17, 17, 0.7));
+  text-align: center;
+}
+
+.custom-enquiry__layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6, 2rem);
+  margin-top: var(--spacing-6, 2rem);
+}
+
+.custom-enquiry__form-wrapper {
+  flex: 1 1 auto;
+}
+
+.custom-enquiry__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6, 2rem);
+  margin: 0;
+}
+
+.custom-enquiry__status {
+  min-height: 1.5rem;
+  font-weight: 600;
+}
+
+.custom-enquiry__status--success {
+  color: var(--color-success, #007a5c);
+}
+
+.custom-enquiry__status--error {
+  color: var(--color-error, #d82c0d);
+}
+
+.custom-enquiry__fieldset {
+  border: 1px solid var(--color-border, rgba(17, 17, 17, 0.12));
+  border-radius: var(--radius-lg, 0.75rem);
+  padding: var(--spacing-5, 1.5rem);
+  background: linear-gradient(
+      180deg,
+      rgba(17, 17, 17, 0.02),
+      rgba(17, 17, 17, 0)
+    ),
+    var(--color-background, #ffffff);
+  box-shadow: var(--shadow-xs, 0 1px 2px rgba(17, 17, 17, 0.08));
+}
+
+.custom-enquiry__legend {
+  display: block;
+  width: 100%;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: var(--spacing-2, 0.75rem);
+}
+
+.custom-enquiry__fieldset-description {
+  margin: 0 0 var(--spacing-4, 1rem);
+  color: var(--color-subdued, rgba(17, 17, 17, 0.65));
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.custom-enquiry__grid {
+  display: grid;
+  gap: var(--spacing-4, 1rem);
+}
+
+.custom-enquiry__grid--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.custom-enquiry__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2, 0.75rem);
+}
+
+.custom-enquiry__field--span-2 {
+  grid-column: span 2;
+}
+
+.custom-enquiry__label {
+  font-weight: 600;
+  color: var(--color-foreground, #111111);
+}
+
+.custom-enquiry__input,
+.custom-enquiry__select,
+.custom-enquiry__textarea {
+  width: 100%;
+  padding: var(--spacing-3, 0.875rem);
+  border: 1px solid var(--color-border, rgba(17, 17, 17, 0.14));
+  border-radius: var(--radius-base, 0.375rem);
+  font: inherit;
+  background-color: var(--color-background, #ffffff);
+  color: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custom-enquiry__input--file {
+  padding: var(--spacing-2, 0.75rem) 0;
+  border: none;
+  background: none;
+}
+
+.custom-enquiry__input--file::file-selector-button {
+  margin-right: var(--spacing-3, 0.875rem);
+  padding: var(--spacing-2, 0.75rem) var(--spacing-4, 1rem);
+  border: 1px solid var(--color-border, rgba(17, 17, 17, 0.14));
+  border-radius: var(--radius-base, 0.375rem);
+  background-color: var(--color-background, #ffffff);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.custom-enquiry__input--file::file-selector-button:hover,
+.custom-enquiry__input--file::file-selector-button:focus {
+  background-color: var(--color-background-soft, rgba(17, 17, 17, 0.04));
+}
+
+.custom-enquiry__input:focus,
+.custom-enquiry__select:focus,
+.custom-enquiry__textarea:focus {
+  border-color: var(--color-focus, #2563eb);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  outline: none;
+}
+
+.custom-enquiry__textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.custom-enquiry__textarea--small {
+  min-height: 6rem;
+}
+
+.custom-enquiry__banner {
+  position: relative;
+  flex: 0 0 auto;
+  border-radius: var(--radius-lg, 0.75rem);
+  overflow: hidden;
+  min-height: 18rem;
+  background: var(--color-background-soft, rgba(17, 17, 17, 0.04));
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(17, 17, 17, 0.12));
+}
+
+.custom-enquiry__banner-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.custom-enquiry__choice-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3, 0.875rem);
+}
+
+.custom-enquiry__choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2, 0.75rem);
+  font-size: 0.95rem;
+  color: inherit;
+}
+
+.custom-enquiry__choice-input {
+  width: 1rem;
+  height: 1rem;
+}
+
+.custom-enquiry__choice-label {
+  font-weight: 500;
+}
+
+.custom-enquiry__field-hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-subdued, rgba(17, 17, 17, 0.7));
+}
+
+.custom-enquiry__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3, 0.875rem);
+  align-items: flex-start;
+}
+
+.custom-enquiry__submit {
+  padding: var(--spacing-3, 0.875rem) var(--spacing-6, 2rem);
+  border: none;
+  border-radius: var(--radius-base, 0.375rem);
+  background-color: var(--color-button, #111111);
+  color: var(--color-button-text, #ffffff);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.custom-enquiry__submit.is-loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.custom-enquiry__submit:hover,
+.custom-enquiry__submit:focus {
+  background-color: var(--color-button-hover, #333333);
+}
+
+.custom-enquiry__disclaimer {
+  margin: 0;
+  max-width: 32rem;
+  font-size: 0.875rem;
+  color: var(--color-subdued, rgba(17, 17, 17, 0.65));
+  line-height: 1.5;
+}
+
+@media (min-width: 48rem) {
+  .custom-enquiry__product-card {
+    grid-template-columns: minmax(12rem, 1fr) 2fr;
+    align-items: center;
+  }
+
+  .custom-enquiry__layout {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .custom-enquiry__form-wrapper {
+    flex: 1 1 0;
+  }
+
+  .custom-enquiry__banner {
+    flex: 0 0 40%;
+    min-height: auto;
+  }
+
+  .custom-enquiry__product-media {
+    aspect-ratio: 1 / 1;
+  }
+
+  .custom-enquiry__product-context {
+    max-width: 46rem;
+  }
+
+  .custom-enquiry__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .custom-enquiry__grid--single {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .custom-enquiry__grid--single .custom-enquiry__field {
+    grid-column: span 2;
+  }
+
+  .custom-enquiry__field--span-2 {
+    grid-column: span 2;
+  }
+
+  .custom-enquiry__actions {
+    align-items: center;
+  }
+
+  .custom-enquiry__submit {
+    align-self: center;
+  }
+}
+
