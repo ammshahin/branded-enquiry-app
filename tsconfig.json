@@ -17,6 +17,9 @@
     "target": "ES2022",
     "baseUrl": ".",
     "types": ["@react-router/node", "vite/client", "@shopify/polaris-types"],
+    "paths": {
+      "nodemailer": ["node_modules/@types/nodemailer"]
+    },
     "rootDirs": [".", "./.react-router/types"]
   }
 }

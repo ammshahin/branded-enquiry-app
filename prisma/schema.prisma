@@ -32,3 +32,37 @@ model Session {
   refreshToken        String?
   refreshTokenExpires DateTime?
 }
+
+model Enquiry {
+  id                 String   @id @default(cuid())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  shop               String
+  blockId            String?
+  name               String
+  email              String
+  firstName          String?
+  lastName           String?
+  companyName        String?
+  phoneNumber        String?
+  requestType        String
+  productReference   String?
+  quantity           Int?
+  productColour      String?
+  printPosition      String?
+  printColours       String?
+  pantoneReference   String?
+  deliveryDeadline   String?
+  workedWithBefore   String?
+  message            String
+  extraInformation   String?
+  artworkNotes       String?
+  productId          String?
+  productHandle      String?
+  productTitle       String?
+  productUrl         String?
+  attachmentFileName String?
+  attachmentMimeType String?
+  attachmentSize     Int?
+  attachmentData     Bytes?
+}

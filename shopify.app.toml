@@ -1,13 +1,12 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "f8ab6745b8d00dc5c02bc3549d0eb495"
-name = "branded-enquiry-app"
-application_url = "https://example.com"
+name = "branding-enquiry-app"
+application_url = "https://branded-enquiry-app.onrender.com"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
-include_config_on_deploy = true
 
 [webhooks]
 api_version = "2026-01"
@@ -25,4 +24,9 @@ api_version = "2026-01"
 scopes = "write_products"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [ "https://branded-enquiry-app.onrender.com/api/auth" ]
+
+[app_proxy]
+prefix = "apps"
+subpath="enquiry"
+url="/proxy/enquiry"
