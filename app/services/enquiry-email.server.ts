@@ -375,16 +375,20 @@ export const sendEnquiryEmails = async ({
   attachment: AttachmentPayload;
 }) => {
   const transporter = getMailer();
+  console.info("Transporter", { transporter });
   const fromAddress = process.env.ENQUIRY_NOTIFICATION_FROM;
+  console.info("From address", { fromAddress });
   const staffRecipients = getStaffRecipients();
+  console.info("Staff recipients", { staffRecipients });
   const customerRecipient = enquiry.email?.trim() || null;
+  console.info("Customer recipient", { customerRecipient });
 
   if (!transporter || !fromAddress || (!staffRecipients.length && !customerRecipient)) {
     throw new Error("Failed to send enquiry notification email");
   }
-
+  console.info("Transporter, from address, staff recipients, and customer recipient are all valid");
   const subject = buildSubject(enquiry);
-
+  console.info("Subject", { subject });
   const staffMessage =
     "A new FREE visual enquiry has been submitted. Please review the details below and follow up with the customer.";
   const customerMessage =

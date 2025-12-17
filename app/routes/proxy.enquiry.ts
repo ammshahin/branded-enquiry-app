@@ -178,6 +178,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   });
 
   try {
+    console.info("Sending enquiry notification email", { enquiryId: enquiry.id });
     await sendEnquiryEmails({ enquiry, attachment });
     console.info("Notification email sent", { enquiryId: enquiry.id });
   } catch (error) {
