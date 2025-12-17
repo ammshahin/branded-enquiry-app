@@ -1,4 +1,5 @@
-import nodemailer from "nodemailer";
+import Mailgun from "mailgun.js";
+import formData from "form-data";
 
 export type AttachmentPayload = {
   filename: string;
@@ -34,25 +35,26 @@ const escapeHtml = (value: string) =>
     .replace(/'/g, "&#39;");
 
 const getMailer = () => {
-  const host = process.env.ENQUIRY_SMTP_HOST;
-  const port = process.env.ENQUIRY_SMTP_PORT
-    ? Number.parseInt(process.env.ENQUIRY_SMTP_PORT, 10)
-    : undefined;
+  const apiKey = process.env.MAILGUN_API_KEY;
+  const domain = process.env.MAILGUN_DOMAIN;
+  const fromEmail = process.env.MAILGUN_FROM_EMAIL;
 
-  if (!host || !port) {
+  if (!apiKey || !domain || !fromEmail) {
     return null;
   }
 
-  const secure = process.env.ENQUIRY_SMTP_SECURE === "true";
-  const user = process.env.ENQUIRY_SMTP_USER;
-  const pass = process.env.ENQUIRY_SMTP_PASS;
-
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    auth: user && pass ? { user, pass } : undefined,
+  const mailgun = new Mailgun(formData);
+  const client = mailgun.client({
+    username: "api",
+    key: apiKey,
+    url: process.env.MAILGUN_API_BASE_URL,
   });
+
+  return {
+    client,
+    domain,
+    fromEmail,
+  };
 };
 
 const formatWorkedWithBefore = (value: EnquiryEmailPayload["workedWithBefore"]) => {
@@ -181,7 +183,6 @@ const buildHtmlEmailBody = (
                 <td align="left" valign="middle" style="font-size:0;line-height:0;">
                   <img src="${logoUrl}" alt="Branding HQ" width="140" style="display:block;border:0;outline:none;text-decoration:none;width:140px;height:auto;">
                 </td>
-
               </tr>
             </table>
           </td>
@@ -374,21 +375,17 @@ export const sendEnquiryEmails = async ({
   enquiry: EnquiryEmailPayload;
   attachment: AttachmentPayload;
 }) => {
-  const transporter = getMailer();
-  console.info("Transporter", { transporter });
-  const fromAddress = process.env.ENQUIRY_NOTIFICATION_FROM;
-  console.info("From address", { fromAddress });
+  const mailer = getMailer();
+  const fromAddress = mailer?.fromEmail;
   const staffRecipients = getStaffRecipients();
-  console.info("Staff recipients", { staffRecipients });
   const customerRecipient = enquiry.email?.trim() || null;
-  console.info("Customer recipient", { customerRecipient });
 
-  if (!transporter || !fromAddress || (!staffRecipients.length && !customerRecipient)) {
+  if (!mailer || !fromAddress || (!staffRecipients.length && !customerRecipient)) {
     throw new Error("Failed to send enquiry notification email");
   }
-  console.info("Transporter, from address, staff recipients, and customer recipient are all valid");
+
   const subject = buildSubject(enquiry);
-  console.info("Subject", { subject });
+
   const staffMessage =
     "A new FREE visual enquiry has been submitted. Please review the details below and follow up with the customer.";
   const customerMessage =
@@ -396,44 +393,39 @@ export const sendEnquiryEmails = async ({
 
   const sendOperations: Promise<unknown>[] = [];
 
+  const attachments =
+    attachment && attachment.data
+      ? [
+          {
+            data: attachment.data,
+            filename: attachment.filename ?? "attachment",
+            contentType: attachment.mimeType,
+          },
+        ]
+      : undefined;
+
   if (staffRecipients.length) {
     sendOperations.push(
-      transporter.sendMail({
+      mailer.client.messages.create(mailer.domain, {
         to: staffRecipients,
         from: fromAddress,
         subject,
         text: buildTextEmailBody(enquiry, staffMessage),
         html: buildHtmlEmailBody(enquiry, staffMessage),
-        attachments: attachment
-          ? [
-              {
-                filename: attachment.filename,
-                content: attachment.data,
-                contentType: attachment.mimeType,
-              },
-            ]
-          : undefined,
+        ...(attachments ? { attachment: attachments } : {}),
       }),
     );
   }
 
   if (customerRecipient) {
     sendOperations.push(
-      transporter.sendMail({
+      mailer.client.messages.create(mailer.domain, {
         to: customerRecipient,
         from: fromAddress,
         subject,
         text: buildTextEmailBody(enquiry, customerMessage),
         html: buildHtmlEmailBody(enquiry, customerMessage),
-        attachments: attachment
-          ? [
-              {
-                filename: attachment.filename,
-                content: attachment.data,
-                contentType: attachment.mimeType,
-              },
-            ]
-          : undefined,
+        ...(attachments ? { attachment: attachments } : {}),
       }),
     );
   }
