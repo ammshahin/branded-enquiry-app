@@ -27,6 +27,6 @@ scopes = "write_products"
 redirect_urls = [ "https://branded-enquiry-app.onrender.com/api/auth" ]
 
 [app_proxy]
+url = "https://branded-enquiry-app.onrender.com/proxy/enquiry"
+subpath = "enquiry"
 prefix = "apps"
-subpath="enquiry"
-url="/proxy/enquiry"
