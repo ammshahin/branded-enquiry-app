@@ -1,10 +1,12 @@
 import type { ActionFunctionArgs } from "react-router";
+import { Prisma } from "@prisma/client";
 import prisma from "../db.server";
 import { authenticate } from "../shopify.server";
 import {
   sendEnquiryEmails,
   type AttachmentPayload,
   type EnquiryEmailPayload,
+  type EnquiryEmailSendOutcome,
 } from "../services/enquiry-email.server";
 
 type StoredEnquiry = EnquiryEmailPayload & {
@@ -13,7 +15,7 @@ type StoredEnquiry = EnquiryEmailPayload & {
   attachmentFileName: string | null;
   attachmentMimeType: string | null;
   attachmentSize: number | null;
-  attachmentData: Buffer | null;
+  attachmentData: Buffer | Uint8Array | null;
 };
 
 const getAttachmentFromForm = async (
@@ -139,14 +141,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   });
 
   const attachment = await getAttachmentFromForm(formData.get("attachment"));
-  const enquiryDelegate = (
-    prisma as unknown as {
-      enquiry: {
-        create: (args: { data: Record<string, unknown> }) => Promise<unknown>;
-      };
-    }
-  ).enquiry;
-  const enquiry = (await enquiryDelegate.create({
+  const enquiry = (await prisma.enquiry.create({
     data: {
       shop: context.session?.shop ?? "unknown",
       blockId,
@@ -168,7 +163,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       attachmentFileName: attachment?.filename ?? null,
       attachmentMimeType: attachment?.mimeType ?? null,
       attachmentSize: attachment?.size ?? null,
-      attachmentData: attachment?.data ?? null,
+      attachmentData: attachment?.data
+        ? new Uint8Array(attachment.data)
+        : null,
     },
   })) as StoredEnquiry;
 
@@ -177,16 +174,81 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     hasAttachment: Boolean(attachment),
   });
 
+  const attemptedAt = new Date();
+  let emailOutcome: EnquiryEmailSendOutcome | null = null;
+  let emailError: unknown = null;
+
   try {
     console.info("Sending enquiry notification email", { enquiryId: enquiry.id });
-    await sendEnquiryEmails({ enquiry, attachment });
-    console.info("Notification email sent", { enquiryId: enquiry.id });
+    emailOutcome = await sendEnquiryEmails({ enquiry, attachment });
   } catch (error) {
+    emailError = error;
     console.error("Failed to send enquiry notification email", {
       enquiryId: enquiry.id,
       error,
     });
   }
+
+  const resolvedOutcome: EnquiryEmailSendOutcome =
+    emailOutcome ??
+    {
+      attempts: [],
+      notificationState: "FAILED",
+      lastError:
+        emailError instanceof Error
+          ? emailError.message
+          : "Unknown error sending enquiry notification email",
+    };
+
+  const updateData = {
+    emailNotificationState: resolvedOutcome.notificationState,
+    lastEmailAttemptAt: attemptedAt,
+    lastEmailError: resolvedOutcome.lastError,
+  };
+
+  const updateOperations: Prisma.PrismaPromise<unknown>[] = [
+    prisma.enquiry.update({
+      where: { id: enquiry.id },
+      data: updateData as Prisma.EnquiryUncheckedUpdateInput,
+    }),
+  ];
+
+  if (resolvedOutcome.attempts.length) {
+    type EnquiryEmailLogDelegate = {
+      createMany: (args: Record<string, unknown>) => Prisma.PrismaPromise<unknown>;
+    };
+
+    const enquiryEmailLogDelegate = (prisma as unknown as {
+      enquiryEmailLog: EnquiryEmailLogDelegate;
+    }).enquiryEmailLog;
+
+    updateOperations.push(
+      enquiryEmailLogDelegate.createMany({
+        data: resolvedOutcome.attempts.map((attempt) => ({
+          enquiryId: enquiry.id,
+          recipient: attempt.recipient,
+          recipientType: attempt.recipientType,
+          status: attempt.status,
+          subject: attempt.subject,
+          errorMessage: attempt.errorMessage,
+          providerId: attempt.providerId,
+          metadata:
+            attempt.metadata !== null
+              ? (attempt.metadata as Prisma.JsonValue)
+              : Prisma.JsonNull,
+        })),
+      }),
+    );
+  }
+
+  await prisma.$transaction(updateOperations);
+
+  console.info("Notification email processed", {
+    enquiryId: enquiry.id,
+    totalAttempts: resolvedOutcome.attempts.length,
+    notificationState: resolvedOutcome.notificationState,
+    lastError: resolvedOutcome.lastError,
+  });
 
   return new Response(
     JSON.stringify({ ok: true }),

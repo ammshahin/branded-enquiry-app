@@ -13,6 +13,33 @@ datasource db {
   url      = "file:dev.sqlite"
 }
 
+enum EnquiryStatus {
+  NEW
+  IN_PROGRESS
+  AWAITING_CUSTOMER
+  QUOTE_SENT
+  COMPLETED
+  CLOSED
+}
+
+enum EnquiryNotificationState {
+  PENDING
+  SENT
+  PARTIAL
+  FAILED
+}
+
+enum EnquiryEmailRecipientType {
+  STAFF
+  CUSTOMER
+  OTHER
+}
+
+enum EnquiryEmailStatus {
+  SUCCESS
+  FAILURE
+}
+
 model Session {
   id            String    @id
   shop          String
@@ -34,35 +61,61 @@ model Session {
 }
 
 model Enquiry {
-  id                 String   @id @default(cuid())
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  shop               String
-  blockId            String?
-  name               String
-  email              String
-  firstName          String?
-  lastName           String?
-  companyName        String?
-  phoneNumber        String?
-  requestType        String
-  productReference   String?
-  quantity           Int?
-  productColour      String?
-  printPosition      String?
-  printColours       String?
-  pantoneReference   String?
-  deliveryDeadline   String?
-  workedWithBefore   String?
-  message            String
-  extraInformation   String?
-  artworkNotes       String?
-  productId          String?
-  productHandle      String?
-  productTitle       String?
-  productUrl         String?
-  attachmentFileName String?
-  attachmentMimeType String?
-  attachmentSize     Int?
-  attachmentData     Bytes?
+  id                     String                   @id @default(cuid())
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  status                 EnquiryStatus            @default(NEW)
+  statusUpdatedAt        DateTime                 @default(now())
+  statusNotes            String?
+  emailNotificationState EnquiryNotificationState @default(PENDING)
+  lastEmailAttemptAt     DateTime?
+  lastEmailError         String?
+  shop                   String
+  blockId                String?
+  name                   String
+  email                  String
+  firstName              String?
+  lastName               String?
+  companyName            String?
+  phoneNumber            String?
+  requestType            String
+  productReference       String?
+  quantity               Int?
+  productColour          String?
+  printPosition          String?
+  printColours           String?
+  pantoneReference       String?
+  deliveryDeadline       String?
+  workedWithBefore       String?
+  message                String
+  extraInformation       String?
+  artworkNotes           String?
+  productId              String?
+  productHandle          String?
+  productTitle           String?
+  productUrl             String?
+  attachmentFileName     String?
+  attachmentMimeType     String?
+  attachmentSize         Int?
+  attachmentData         Bytes?
+  emailLogs              EnquiryEmailLog[]
+
+  @@index([shop, createdAt])
+  @@index([shop, status])
+}
+
+model EnquiryEmailLog {
+  id            String                   @id @default(cuid())
+  createdAt     DateTime                 @default(now())
+  enquiry       Enquiry                  @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  enquiryId     String
+  recipient     String
+  recipientType EnquiryEmailRecipientType
+  status        EnquiryEmailStatus
+  subject       String?
+  errorMessage  String?
+  providerId    String?
+  metadata      Json?
+
+  @@index([enquiryId, createdAt])
 }

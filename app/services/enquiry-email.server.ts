@@ -26,6 +26,46 @@ export type EnquiryEmailPayload = {
   attachmentFileName?: string | null;
 };
 
+export const ENQUIRY_EMAIL_RECIPIENT = {
+  STAFF: "STAFF",
+  CUSTOMER: "CUSTOMER",
+  OTHER: "OTHER",
+} as const;
+export type EnquiryEmailRecipientType =
+  (typeof ENQUIRY_EMAIL_RECIPIENT)[keyof typeof ENQUIRY_EMAIL_RECIPIENT];
+
+export const ENQUIRY_EMAIL_STATUS = {
+  SUCCESS: "SUCCESS",
+  FAILURE: "FAILURE",
+} as const;
+export type EnquiryEmailStatus =
+  (typeof ENQUIRY_EMAIL_STATUS)[keyof typeof ENQUIRY_EMAIL_STATUS];
+
+export const ENQUIRY_NOTIFICATION_STATE = {
+  PENDING: "PENDING",
+  SENT: "SENT",
+  PARTIAL: "PARTIAL",
+  FAILED: "FAILED",
+} as const;
+export type EnquiryNotificationState =
+  (typeof ENQUIRY_NOTIFICATION_STATE)[keyof typeof ENQUIRY_NOTIFICATION_STATE];
+
+export type EnquiryEmailSendAttempt = {
+  recipient: string;
+  recipientType: EnquiryEmailRecipientType;
+  status: EnquiryEmailStatus;
+  subject: string;
+  errorMessage: string | null;
+  providerId: string | null;
+  metadata: Record<string, unknown> | null;
+};
+
+export type EnquiryEmailSendOutcome = {
+  attempts: EnquiryEmailSendAttempt[];
+  notificationState: EnquiryNotificationState;
+  lastError: string | null;
+};
+
 const escapeHtml = (value: string) =>
   value
     .replace(/&/g, "&amp;")
@@ -368,30 +408,109 @@ const getStaffRecipients = () => {
     .filter(Boolean);
 };
 
+const summarizeAttempts = (
+  attempts: EnquiryEmailSendAttempt[],
+): {
+  notificationState: EnquiryNotificationState;
+  lastError: string | null;
+} => {
+  if (attempts.length === 0) {
+    return {
+      notificationState: ENQUIRY_NOTIFICATION_STATE.FAILED,
+      lastError: "No email recipients configured for enquiry notifications",
+    };
+  }
+
+  const failures = attempts.filter(
+    (entry) => entry.status === ENQUIRY_EMAIL_STATUS.FAILURE,
+  );
+  const successes = attempts.filter(
+    (entry) => entry.status === ENQUIRY_EMAIL_STATUS.SUCCESS,
+  );
+  const lastFailure = failures.at(-1)?.errorMessage ?? null;
+
+  if (failures.length === 0) {
+    return {
+      notificationState: ENQUIRY_NOTIFICATION_STATE.SENT,
+      lastError: null,
+    };
+  }
+
+  if (successes.length > 0) {
+    return {
+      notificationState: ENQUIRY_NOTIFICATION_STATE.PARTIAL,
+      lastError: lastFailure,
+    };
+  }
+
+  return {
+    notificationState: ENQUIRY_NOTIFICATION_STATE.FAILED,
+    lastError: lastFailure,
+  };
+};
+
+const buildErrorMetadata = (error: unknown): Record<string, unknown> | null => {
+  if (error && typeof error === "object") {
+    const candidate = error as {
+      name?: string;
+      message?: string;
+      status?: number;
+      statusCode?: number;
+      code?: string;
+      details?: unknown;
+    };
+
+    return {
+      name: candidate.name ?? "Error",
+      status: candidate.status ?? candidate.statusCode ?? null,
+      code: candidate.code ?? null,
+      details: candidate.details ?? null,
+    };
+  }
+
+  return null;
+};
+
+const buildSuccessMetadata = (result: unknown): Record<string, unknown> | null => {
+  if (result && typeof result === "object") {
+    const candidate = result as { id?: string; message?: string };
+    return {
+      message: candidate.message ?? null,
+    };
+  }
+
+  return null;
+};
+
+const normalizeErrorMessage = (error: unknown) => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  return "Unknown error sending email";
+};
+
 export const sendEnquiryEmails = async ({
   enquiry,
   attachment,
 }: {
   enquiry: EnquiryEmailPayload;
   attachment: AttachmentPayload;
-}) => {
+}): Promise<EnquiryEmailSendOutcome> => {
   const mailer = getMailer();
-  const fromAddress = mailer?.fromEmail;
+  const fromAddress = mailer?.fromEmail ?? null;
   const staffRecipients = getStaffRecipients();
   const customerRecipient = enquiry.email?.trim() || null;
-
-  if (!mailer || !fromAddress || (!staffRecipients.length && !customerRecipient)) {
-    throw new Error("Failed to send enquiry notification email");
-  }
-
   const subject = buildSubject(enquiry);
 
   const staffMessage =
     "A new FREE visual enquiry has been submitted. Please review the details below and follow up with the customer.";
   const customerMessage =
     "This enquiry has been sent to our sales team. We will get back to you with a quotation asap.";
-
-  const sendOperations: Promise<unknown>[] = [];
 
   const attachments =
     attachment && attachment.data
@@ -404,31 +523,143 @@ export const sendEnquiryEmails = async ({
         ]
       : undefined;
 
-  if (staffRecipients.length) {
-    sendOperations.push(
-      mailer.client.messages.create(mailer.domain, {
-        to: staffRecipients,
-        from: fromAddress,
-        subject,
-        text: buildTextEmailBody(enquiry, staffMessage),
-        html: buildHtmlEmailBody(enquiry, staffMessage),
-        ...(attachments ? { attachment: attachments } : {}),
-      }),
-    );
-  }
-
-  if (customerRecipient) {
-    sendOperations.push(
-      mailer.client.messages.create(mailer.domain, {
-        to: customerRecipient,
-        from: fromAddress,
-        subject,
+  const staffBodies =
+    staffRecipients.length > 0
+      ? {
+          text: buildTextEmailBody(enquiry, staffMessage),
+          html: buildHtmlEmailBody(enquiry, staffMessage),
+        }
+      : null;
+  const customerBodies = customerRecipient
+    ? {
         text: buildTextEmailBody(enquiry, customerMessage),
         html: buildHtmlEmailBody(enquiry, customerMessage),
-        ...(attachments ? { attachment: attachments } : {}),
-      }),
-    );
+      }
+    : null;
+
+  const intendedRecipients: Array<{
+    email: string;
+    recipientType: EnquiryEmailRecipientType;
+    textBody: string;
+    htmlBody: string;
+  }> = [];
+
+  if (staffBodies) {
+    for (const email of staffRecipients) {
+      intendedRecipients.push({
+        email,
+        recipientType: ENQUIRY_EMAIL_RECIPIENT.STAFF,
+        textBody: staffBodies.text,
+        htmlBody: staffBodies.html,
+      });
+    }
   }
 
-  await Promise.all(sendOperations);
+  if (customerRecipient && customerBodies) {
+    intendedRecipients.push({
+      email: customerRecipient,
+      recipientType: ENQUIRY_EMAIL_RECIPIENT.CUSTOMER,
+      textBody: customerBodies.text,
+      htmlBody: customerBodies.html,
+    });
+  }
+
+  if (!intendedRecipients.length) {
+    const attempts: EnquiryEmailSendAttempt[] = [
+      {
+        recipient: "n/a",
+        recipientType: ENQUIRY_EMAIL_RECIPIENT.OTHER,
+        status: ENQUIRY_EMAIL_STATUS.FAILURE,
+        subject,
+        errorMessage: "No email recipients configured for enquiry notifications",
+        providerId: null,
+        metadata: null,
+      },
+    ];
+
+    const summary = summarizeAttempts(attempts);
+
+    return {
+      attempts,
+      notificationState: summary.notificationState,
+      lastError: summary.lastError,
+    };
+  }
+
+  const misconfigurationError = !mailer
+    ? "Mailgun client is not configured."
+    : !fromAddress
+      ? "Missing Mailgun sender address."
+      : null;
+
+  const attempts: EnquiryEmailSendAttempt[] = [];
+
+  const sendToRecipient = async (recipient: {
+    email: string;
+    recipientType: EnquiryEmailRecipientType;
+    textBody: string;
+    htmlBody: string;
+  }) => {
+    if (misconfigurationError || !mailer || !fromAddress) {
+      attempts.push({
+        recipient: recipient.email,
+        recipientType: recipient.recipientType,
+        status: ENQUIRY_EMAIL_STATUS.FAILURE,
+        subject,
+        errorMessage: misconfigurationError ?? "Mailer configuration is incomplete.",
+        providerId: null,
+        metadata: { reason: "missing_mailer_configuration" },
+      });
+      return;
+    }
+
+    try {
+      const response = await mailer.client.messages.create(mailer.domain, {
+        to: recipient.email,
+        from: fromAddress,
+        subject,
+        text: recipient.textBody,
+        html: recipient.htmlBody,
+        ...(attachments ? { attachment: attachments } : {}),
+      });
+
+      const providerId =
+        response && typeof response === "object" && "id" in response
+          ? (response.id as string)
+          : null;
+
+      attempts.push({
+        recipient: recipient.email,
+        recipientType: recipient.recipientType,
+        status: ENQUIRY_EMAIL_STATUS.SUCCESS,
+        subject,
+        errorMessage: null,
+        providerId,
+        metadata: buildSuccessMetadata(response),
+      });
+    } catch (error) {
+      attempts.push({
+        recipient: recipient.email,
+        recipientType: recipient.recipientType,
+        status: ENQUIRY_EMAIL_STATUS.FAILURE,
+        subject,
+        errorMessage: normalizeErrorMessage(error),
+        providerId: null,
+        metadata: buildErrorMetadata(error),
+      });
+    }
+  };
+
+  for (const recipient of intendedRecipients) {
+    // eslint-disable-next-line no-await-in-loop
+    await sendToRecipient(recipient);
+  }
+
+  const summary = summarizeAttempts(attempts);
+
+  return {
+    attempts,
+    notificationState: summary.notificationState,
+    lastError: summary.lastError,
+  };
 };
