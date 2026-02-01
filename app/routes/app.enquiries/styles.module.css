@@ -1,0 +1,266 @@
+.pageRoot {
+  display: grid;
+  gap: 32px;
+}
+
+.metricsRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.metricsRow::-webkit-scrollbar {
+  height: 6px;
+}
+
+.metricCard {
+  min-width: 220px;
+  flex: 0 0 auto;
+  border-radius: 16px;
+}
+
+.metricValue {
+  font-size: 2.25rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.filterCard {
+  display: grid;
+  gap: 20px;
+}
+
+.filterForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.filterField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 240px;
+}
+
+.filterField label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-subdued, #6d7175);
+}
+
+.filterField input,
+.filterField select,
+.filterField textarea {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(122, 130, 154, 0.35);
+  border-radius: 6px;
+  background: var(--surface-base, #ffffff);
+  color: inherit;
+}
+
+.filterActions {
+  display: flex;
+  gap: 12px;
+}
+
+.emailSummaryGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.enquiryCards {
+  display: grid;
+  gap: 24px;
+}
+
+.tableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px 12px;
+  color: var(--text-subdued, #6d7175);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tableHeader span:first-child {
+  flex: 1;
+}
+
+.tableHeader span:last-child {
+  width: 140px;
+  text-align: right;
+}
+
+.row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.rowContent {
+  flex: 1;
+  display: grid;
+  gap: 12px;
+}
+
+.rowTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.rowMeta {
+  display: grid;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--text-subdued, #6d7175);
+}
+
+.rowBadges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.rowSummary {
+  display: grid;
+  gap: 8px;
+}
+
+.rowActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  min-width: 120px;
+}
+
+.expandIcon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.popoverWrap {
+  position: relative;
+}
+
+.popoverCard {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  padding: 16px;
+  border: 1px solid rgba(122, 130, 154, 0.25);
+  border-radius: 12px;
+  background: var(--surface-base, #ffffff);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.cardDetails {
+  display: grid;
+  gap: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(122, 130, 154, 0.18);
+}
+
+.detailMeta {
+  display: grid;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-subdued, #6d7175);
+}
+
+.detailGrid {
+  display: grid;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-subdued, #6d7175);
+}
+
+.detailBadges {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.statusForm {
+  display: grid;
+  gap: 16px;
+}
+
+.statusFormCompact {
+  display: grid;
+  gap: 12px;
+}
+
+.statusFormField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.statusFormField span {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-subdued, #6d7175);
+}
+
+.statusFormField select,
+.statusFormField textarea {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(122, 130, 154, 0.35);
+  border-radius: 6px;
+  background: var(--surface-base, #ffffff);
+  color: inherit;
+}
+
+.emailLogList {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.metadataPre {
+  margin: 6px 0 0;
+  padding: 8px;
+  background: rgba(12, 13, 13, 0.05);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  overflow-x: auto;
+}
+
+.emptyState {
+  padding: 32px 0;
+  text-align: center;
+  color: var(--text-subdued, #6d7175);
+}
+
+.paginationBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
