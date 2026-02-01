@@ -5,12 +5,23 @@
 {% endcomment %}
 {% liquid
   assign show_intro_text = block.settings.show_intro_text
-  assign product_handle_param = block.settings.product_handle_param | default: 'product_handle'
-  assign show_product_context = block.settings.show_product_context
+  assign product_handle_param = 'product_handle'
+  assign show_product_context = true
   assign preview_product = block.settings.preview_product
   assign preview_product_json = nil
   assign banner_image = block.settings.banner_image
   assign banner_image_url = ''
+  assign header_image_size = block.settings.header_image_size | default: 120
+  assign heading_size = block.settings.heading_size | default: 28
+  assign button_text = block.settings.button_text
+  assign button_color_scheme = block.settings.button_color_scheme | default: 'primary'
+  assign button_bg = block.settings.button_background_color
+  assign button_text_color = block.settings.button_text_color
+  if button_text == blank
+    assign button_label = 'sections.custom_enquiry.submit' | t
+  else
+    assign button_label = button_text
+  endif
   if banner_image != blank
     assign banner_image_url = banner_image | image_url: width: 1200
   else
@@ -26,6 +37,7 @@
 <section
   class="custom-enquiry"
   id="custom-enquiry-{{ block.id }}"
+  style="--header-image-size: {{ header_image_size }}px; --heading-font-size: {{ heading_size }}px;{% if button_bg != blank %} --button-bg: {{ button_bg }};{% endif %}{% if button_text_color != blank %} --button-text: {{ button_text_color }};{% endif %}"
   {{ block.shopify_attributes }}
 >
   <div
@@ -34,9 +46,48 @@
       data-product-context-wrapper
     {% endif %}
   >
-    <h1 class="custom-enquiry__heading">
-      {{ 'sections.custom_enquiry.title' | t }}
-    </h1>
+    <script type="application/json" data-title-templates>
+      {
+        "visual": {{ 'sections.custom_enquiry.titles.visual' | t | json }},
+        "visual_with_product": {{ 'sections.custom_enquiry.titles.visual_with_product' | t | json }},
+        "quote": {{ 'sections.custom_enquiry.titles.quote' | t | json }},
+        "quote_with_product": {{ 'sections.custom_enquiry.titles.quote_with_product' | t | json }},
+        "sample": {{ 'sections.custom_enquiry.titles.sample' | t | json }},
+        "sample_with_product": {{ 'sections.custom_enquiry.titles.sample_with_product' | t | json }},
+        "buy": {{ 'sections.custom_enquiry.titles.buy' | t | json }},
+        "buy_with_product": {{ 'sections.custom_enquiry.titles.buy_with_product' | t | json }}
+      }
+    </script>
+    <header class="custom-enquiry__header">
+      {% if show_product_context %}
+        <div
+          class="custom-enquiry__product-context"
+          data-product-context
+          data-product-handle-param="{{ product_handle_param | escape }}"
+          data-shop-currency="{{ shop.currency }}"
+          data-locale="{{ request.locale.iso_code | default: shop.locale }}"
+        >
+          <div class="custom-enquiry__header-media" data-product-card hidden aria-hidden="true">
+            <img
+              class="custom-enquiry__header-image"
+              data-product-image
+              alt=""
+              width="{{ header_image_size }}"
+              height="{{ header_image_size }}"
+              loading="lazy"
+            >
+          </div>
+          {% if preview_product_json %}
+            <script type="application/json" data-preview-product>
+              {{ preview_product_json }}
+            </script>
+          {% endif %}
+        </div>
+      {% endif %}
+      <h1 class="custom-enquiry__heading" data-dynamic-heading>
+        {{ 'sections.custom_enquiry.title' | t }}
+      </h1>
+    </header>
     {% if show_intro_text and block.settings.intro_text != blank %}
       <div class="custom-enquiry__intro rte">
         {{ block.settings.intro_text }}
@@ -45,51 +96,6 @@
     <p class="custom-enquiry__subheading">
       {{ 'sections.custom_enquiry.subtitle' | t }}
     </p>
-    {% if show_product_context %}
-      <div
-        class="custom-enquiry__product-context"
-        data-product-context
-        data-product-handle-param="{{ product_handle_param | escape }}"
-        data-shop-currency="{{ shop.currency }}"
-        data-locale="{{ request.locale.iso_code | default: shop.locale }}"
-      >
-        <article class="custom-enquiry__product-card" data-product-card hidden>
-          <div class="custom-enquiry__product-media" aria-hidden="true">
-            <img
-              class="custom-enquiry__product-image"
-              data-product-image
-              alt=""
-              width="400"
-              height="300"
-              loading="lazy"
-            >
-          </div>
-          <div class="custom-enquiry__product-copy">
-            <p class="custom-enquiry__product-label">
-              {{ 'sections.custom_enquiry.product.label' | t }}
-            </p>
-            <h2 class="custom-enquiry__product-title" data-product-title></h2>
-            <p class="custom-enquiry__product-price" data-product-price></p>
-            <a
-              class="custom-enquiry__product-link"
-              data-product-url
-              target="_blank"
-              rel="noopener"
-            >
-              {{ 'sections.custom_enquiry.product.view_link' | t }}
-            </a>
-          </div>
-        </article>
-        <p class="custom-enquiry__product-empty" data-product-empty hidden>
-          {{ 'sections.custom_enquiry.product.fallback' | t }}
-        </p>
-        {% if preview_product_json %}
-          <script type="application/json" data-preview-product>
-            {{ preview_product_json }}
-          </script>
-        {% endif %}
-      </div>
-    {% endif %}
 
     <div class="custom-enquiry__layout">
       <div class="custom-enquiry__form-wrapper">
@@ -105,7 +111,7 @@
         >
           <div class="custom-enquiry__status" aria-live="polite" role="status"></div>
           <input type="hidden" name="block_id" value="{{ block.id }}">
-          <input type="hidden" name="request_type" value="visual_enquiry">
+          <input type="hidden" name="request_type" value="visual_enquiry" data-request-type-input>
           {% if show_product_context %}
             <input type="hidden" name="product_id" data-product-id-input>
             <input type="hidden" name="product_handle" data-product-handle-input>
@@ -256,8 +262,8 @@
           </fieldset>
 
           <div class="custom-enquiry__actions">
-            <button class="custom-enquiry__submit" type="submit">
-              {{ 'sections.custom_enquiry.submit' | t }}
+            <button class="custom-enquiry__submit custom-enquiry__submit--{{ button_color_scheme }}" type="submit">
+              {{ button_label }}
             </button>
             <p class="custom-enquiry__disclaimer">
               {{ 'sections.custom_enquiry.disclaimer' | t }}
@@ -283,6 +289,32 @@
   "target": "section",
   "settings": [
     {
+      "type": "header",
+      "content": "Header appearance"
+    },
+    {
+      "type": "range",
+      "id": "header_image_size",
+      "min": 64,
+      "max": 200,
+      "step": 8,
+      "default": 120,
+      "unit": "px",
+      "label": "Header product image size",
+      "info": "Diameter of the circular product image next to the title."
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "min": 18,
+      "max": 48,
+      "step": 2,
+      "default": 28,
+      "unit": "px",
+      "label": "Heading size",
+      "info": "Font size of the main title (e.g. Instant Quote for…)."
+    },
+    {
       "type": "richtext",
       "id": "intro_text",
       "label": "Introductory rich text",
@@ -302,20 +334,41 @@
     },
     {
       "type": "header",
-      "content": "Product context"
-    },
-    {
-      "type": "checkbox",
-      "id": "show_product_context",
-      "label": "Show product details when a URL parameter is provided",
-      "info": "Link to this page using a product handle query string, for example ?product_handle={{ product.handle }}.",
-      "default": true
+      "content": "Button"
     },
     {
       "type": "text",
-      "id": "product_handle_param",
-      "label": "Product handle URL parameter",
-      "default": "product_handle"
+      "id": "button_text",
+      "label": "Button text",
+      "default": "Send enquiry",
+      "info": "Leave blank to use the default translation."
+    },
+    {
+      "type": "select",
+      "id": "button_color_scheme",
+      "label": "Button style",
+      "options": [
+        { "value": "primary", "label": "Primary (dark)" },
+        { "value": "secondary", "label": "Secondary (outline)" },
+        { "value": "accent", "label": "Accent" }
+      ],
+      "default": "primary"
+    },
+    {
+      "type": "color",
+      "id": "button_background_color",
+      "label": "Button background color",
+      "info": "Leave blank to use the style default."
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text color",
+      "info": "Leave blank to use the style default."
+    },
+    {
+      "type": "header",
+      "content": "Product context"
     },
     {
       "type": "product",

@@ -2,7 +2,17 @@
   "sections": {
     "custom_enquiry": {
       "title": "Request a FREE visual",
-      "subtitle": "Complete the quick form below and we’ll return a personalised visual proof.",
+      "titles": {
+        "visual": "Request a FREE visual",
+        "visual_with_product": "Request a Free Visual for {{ product_title }}",
+        "quote": "Instant Quote",
+        "quote_with_product": "Instant Quote for {{ product_title }}",
+        "sample": "Order a Free Sample",
+        "sample_with_product": "Order a Free Sample for {{ product_title }}",
+        "buy": "Buying request",
+        "buy_with_product": "Buying request for {{ product_title }}"
+      },
+      "subtitle": "Please complete your details below and we’ll get back to you right away.",
       "groups": {
         "request": {
           "title": "Request details",

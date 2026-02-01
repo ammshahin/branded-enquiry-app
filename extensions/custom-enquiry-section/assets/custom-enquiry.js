@@ -32,6 +32,51 @@
     }
   };
 
+  const TYPE_PARAM = "type";
+  const REQUEST_TYPE_MAP = {
+    visual: "visual_enquiry",
+    quote: "quote",
+    sample: "sample",
+    buy: "buy",
+  };
+
+  const getTitleTemplates = (section) => {
+    const script = section?.querySelector("[data-title-templates]");
+    if (!script) return null;
+    try {
+      return JSON.parse(script.textContent);
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const getDynamicTitleText = (type, productTitle, templates) => {
+    if (!type || !templates) return null;
+    const key = productTitle
+      ? `${type}_with_product`
+      : type;
+    const template = templates[key] ?? templates[type];
+    if (!template) return null;
+    return template.replace(/\{\{\s*product_title\s*\}\}/g, productTitle || "");
+  };
+
+  const updateDynamicHeading = (section, productTitle) => {
+    if (!section) return;
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get(TYPE_PARAM);
+    if (!type) return;
+    const templates = getTitleTemplates(section);
+    const text = getDynamicTitleText(type, productTitle, templates);
+    if (text == null) return;
+    const heading = section.querySelector("[data-dynamic-heading]");
+    if (heading) heading.textContent = text;
+    const requestType = REQUEST_TYPE_MAP[type];
+    if (requestType) {
+      const input = section.querySelector("[data-request-type-input]");
+      if (input) input.value = requestType;
+    }
+  };
+
   const applyProductToUI = ({
     form,
     contextNode,
@@ -106,6 +151,8 @@
       setHiddenValue(form, "[data-product-title-input]", product?.title);
       setHiddenValue(form, "[data-product-url-input]", productUrl);
     }
+    const section = form?.closest(".custom-enquiry");
+    if (section) updateDynamicHeading(section, product?.title || "");
   };
 
   const showEmptyState = (contextNode) => {
@@ -286,6 +333,8 @@
   const init = () => {
     document.querySelectorAll(".js-custom-request-form").forEach((form) => {
       initForm(form);
+      const section = form.closest(".custom-enquiry");
+      if (section) updateDynamicHeading(section, null);
       initProductContext(form);
     });
   };
